@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSH Bookmarker</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <h1>SSH Bookmarker</h1>
+      </div>
+      <div class="topbar-actions">
+        <span class="hint" id="terminal-hint"></span>
+        <button id="prefs-btn" class="btn" title="Preferences">⚙ Preferences</button>
+        <button id="new-btn" class="btn btn-primary">+ New bookmark</button>
+      </div>
+    </header>
+
+    <main id="app">
+      <section id="list-view">
+        <div id="bookmark-list" class="cards"></div>
+        <div id="empty-state" class="empty hidden">
+          <p>No bookmarks yet.</p>
+          <p class="muted">Click <strong>+ New bookmark</strong> to add a server.</p>
+        </div>
+      </section>
+
+      <section id="form-view" class="hidden">
+        <form id="bookmark-form" class="form" autocomplete="off">
+          <div class="form-header">
+            <h2 id="form-title">New bookmark</h2>
+          </div>
+
+          <input type="hidden" name="id" />
+
+          <div class="grid">
+            <label class="field">
+              <span>Name</span>
+              <input name="name" type="text" placeholder="prod-web-1" required />
+            </label>
+
+            <label class="field">
+              <span>User</span>
+              <input name="user" type="text" placeholder="ubuntu" required />
+            </label>
+
+            <label class="field field-wide">
+              <span>Host</span>
+              <input name="host" type="text" placeholder="example.com or 10.0.0.1" required />
+            </label>
+
+            <label class="field">
+              <span>Port</span>
+              <input name="port" type="number" min="1" max="65535" value="22" required />
+            </label>
+
+            <fieldset class="field field-wide auth-field">
+              <legend>Authentication</legend>
+              <label class="radio">
+                <input type="radio" name="auth_type" value="password" checked />
+                <span>Password (prompt in terminal)</span>
+              </label>
+              <label class="radio">
+                <input type="radio" name="auth_type" value="key" />
+                <span>SSH key file</span>
+              </label>
+            </fieldset>
+
+            <label class="field field-wide" id="key-path-field">
+              <span>SSH key path</span>
+              <div class="input-with-button">
+                <input name="key_path" type="text" placeholder="~/.ssh/id_ed25519" />
+                <button type="button" id="choose-key-btn" class="btn">Choose…</button>
+              </div>
+              <small class="muted">Path to your private key. <code>~</code> is expanded.</small>
+            </label>
+
+            <label class="field field-wide">
+              <span>Extra SSH args (optional)</span>
+              <input name="extra_args" type="text" placeholder="-A -L 8080:localhost:80" />
+            </label>
+
+            <label class="field field-wide">
+              <span>Notes (optional)</span>
+              <textarea name="notes" rows="2" placeholder="Anything worth remembering"></textarea>
+            </label>
+          </div>
+
+          <div class="preview">
+            <span class="preview-label">Preview</span>
+            <code id="cmd-preview">ssh user@host</code>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="cancel-btn" class="btn btn-ghost">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <div id="prefs-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-card" role="dialog" aria-labelledby="prefs-title">
+        <div class="modal-head">
+          <h2 id="prefs-title">Preferences</h2>
+          <button type="button" class="btn btn-ghost" data-close>✕</button>
+        </div>
+
+        <div class="modal-body">
+          <label class="field">
+            <span>Terminal app</span>
+            <select id="prefs-terminal">
+              <option value="">Auto-detect (system default)</option>
+            </select>
+            <small class="muted" id="prefs-terminal-hint"></small>
+          </label>
+
+          <label class="field">
+            <span>Bookmarks folder</span>
+            <div class="input-with-button">
+              <input id="prefs-db-dir" type="text" readonly />
+              <button type="button" id="prefs-choose-folder" class="btn">Choose…</button>
+              <button type="button" id="prefs-reset-folder" class="btn btn-ghost">Reset</button>
+            </div>
+            <small class="muted">SQLite database lives here as <code>bookmarks.db</code>.</small>
+          </label>
+
+          <label class="field" id="prefs-dock-field" hidden>
+            <span>macOS dock</span>
+            <label class="checkbox">
+              <input type="checkbox" id="prefs-hide-dock" />
+              <span>Run as menu bar app (hide dock icon)</span>
+            </label>
+            <small class="muted">
+              When enabled, the app stays in the macOS status bar and lists your
+              bookmarks as a menu — no dock icon.
+            </small>
+          </label>
+
+          <div class="field">
+            <span>Export</span>
+            <div>
+              <button type="button" id="prefs-export" class="btn">Export bookmarks to JSON…</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" data-close>Done</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
