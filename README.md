@@ -1,12 +1,24 @@
+<p align="center">
+  <img src="docs/cover.png" alt="SSH Bookmarker" width="100%" />
+</p>
+
 # SSH Bookmarker
 
 > A native, no-friction launcher for your SSH connections — living quietly in your macOS menu bar.
 
-[![Platform: macOS](https://img.shields.io/badge/platform-macOS%2011%2B-black?logo=apple&logoColor=white)](#platform-support)
-[![Built with Tauri 2](https://img.shields.io/badge/built%20with-Tauri%202-FFC131?logo=tauri&logoColor=black)](https://tauri.app)
-[![Rust + TypeScript](https://img.shields.io/badge/stack-Rust%20%2B%20TypeScript-blue)](#architecture)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+<p align="center">
+  <a href="#platform-support"><img alt="Platform: macOS" src="https://img.shields.io/badge/platform-macOS%2011%2B-black?logo=apple&logoColor=white"></a>
+  <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-FFC131?logo=tauri&logoColor=black"></a>
+  <a href="#architecture"><img alt="Rust + TypeScript" src="https://img.shields.io/badge/stack-Rust%20%2B%20TypeScript-blue?logo=rust&logoColor=white"></a>
+  <a href="https://www.sqlite.org"><img alt="Storage: libSQL / SQLite" src="https://img.shields.io/badge/storage-libSQL%20%2F%20SQLite-003B57?logo=sqlite&logoColor=white"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen"></a>
+  <a href="https://github.com/aletheia/ssh-bookmarker/releases"><img alt="Version" src="https://img.shields.io/badge/version-0.2.0-blue"></a>
+  <br>
+  <a href="https://github.com/aletheia/ssh-bookmarker/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/aletheia/ssh-bookmarker?style=social"></a>
+  <a href="https://github.com/aletheia/ssh-bookmarker/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/aletheia/ssh-bookmarker"></a>
+  <a href="https://github.com/aletheia/ssh-bookmarker/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/aletheia/ssh-bookmarker"></a>
+</p>
 
 SSH Bookmarker is a small Tauri 2 desktop app that keeps every server you care about one click away. Save the connection details once; from then on, your bookmarks live in the menu bar and open in your terminal of choice with a single click. No `~/.ssh/config` gymnastics, no shell aliases to remember, no rummaging through password managers for a hostname.
 
