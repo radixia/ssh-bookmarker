@@ -92,7 +92,7 @@ Edit `migrate()` in `src-tauri/src/db.rs`. There is currently no migration frame
 python3 scripts/gen-tray-icon.py
 ```
 
-Writes `src-tauri/icons/tray-icon.png` (44×44, grayscale+alpha). Note: `lib.rs` currently bundles `icons/icon.png` (the colour logo) for the tray, not this monochrome template. If you want the proper template behaviour back, switch the `include_bytes!` path and re-enable `.icon_as_template(true)`.
+Writes `src-tauri/icons/tray-icon.png` (44×44, grayscale+alpha). `lib.rs` bundles this file as a template image (`.icon_as_template(true)`) so macOS tints it black or white to match the menu-bar appearance. The colour `icon.png` is the *app* (Dock/Finder) icon and is configured via `tauri.conf.json` → `bundle.icon`; do not conflate the two.
 
 ## Conventions
 

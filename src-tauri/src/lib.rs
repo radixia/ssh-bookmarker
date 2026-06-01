@@ -286,12 +286,12 @@ pub fn run() {
             });
 
             const TRAY_ICON_BYTES: &[u8] =
-                include_bytes!("../icons/icon.png");
+                include_bytes!("../icons/tray-icon.png");
             let icon = Image::from_bytes(TRAY_ICON_BYTES)
                 .map_err(|e| Box::<dyn std::error::Error>::from(e.to_string()))?;
             let _tray = TrayIconBuilder::with_id(TRAY_ID)
                 .icon(icon)
-                .icon_as_template(false)
+                .icon_as_template(true)
                 .tooltip("SSH Bookmarker")
                 .on_menu_event(handle_tray_menu_event)
                 .build(app)?;
