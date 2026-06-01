@@ -196,9 +196,13 @@ Verify your temp directory is writable, and that the chosen terminal has been gr
 
 Currently macOS only. The launcher uses `open -b <bundle-id>` which is mac-specific; the rest of the codebase is portable. Contributions to add Linux (`xdg-open` + a terminal-emulator detection heuristic) and Windows (Windows Terminal profiles) are welcome.
 
+## Contributing
+
+PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and the (short) list of things that have bitten contributors before.
+
 ## License
 
-Not yet specified. Treat as "all rights reserved" until a `LICENSE` file is added.
+[MIT](LICENSE) © aletheia.
 
 ## Acknowledgements
 
