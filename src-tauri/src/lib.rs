@@ -62,8 +62,11 @@ async fn delete_bookmark(
 #[tauri::command]
 async fn launch_bookmark(state: State<'_, AppState>, id: i64) -> AppResult<String> {
     let bookmark = state.db.lock().await.get(id).await?;
-    let terminal = state.settings.lock().await.terminal.clone();
-    launcher::launch(&bookmark, terminal.as_deref())
+    let (terminal, update_mode) = {
+        let s = state.settings.lock().await;
+        (s.terminal.clone(), s.update_mode)
+    };
+    launcher::launch(&bookmark, terminal.as_deref(), update_mode)
 }
 
 #[tauri::command]
@@ -158,10 +161,12 @@ struct SettingsView {
     terminal: Option<String>,
     db_dir: Option<String>,
     hide_dock_icon: bool,
+    update_mode: bool,
     effective_db_dir: String,
     default_db_dir: String,
     detected_terminal: String,
     is_macos: bool,
+    openclaw_update_cmd: &'static str,
 }
 
 impl From<Settings> for SettingsView {
@@ -178,10 +183,12 @@ impl From<Settings> for SettingsView {
             terminal: s.terminal,
             db_dir: s.db_dir,
             hide_dock_icon: s.hide_dock_icon,
+            update_mode: s.update_mode,
             effective_db_dir: effective,
             default_db_dir: default_dir,
             detected_terminal: launcher::detect_default_terminal(),
             is_macos: cfg!(target_os = "macos"),
+            openclaw_update_cmd: launcher::OPENCLAW_UPDATE_CMD,
         }
     }
 }
@@ -247,9 +254,12 @@ fn handle_tray_menu_event(app: &AppHandle, event: MenuEvent) {
             tauri::async_runtime::spawn(async move {
                 let state = app.state::<AppState>();
                 let bookmark = state.db.lock().await.get(bid).await;
-                let terminal = state.settings.lock().await.terminal.clone();
+                let (terminal, update_mode) = {
+                    let s = state.settings.lock().await;
+                    (s.terminal.clone(), s.update_mode)
+                };
                 if let Ok(b) = bookmark {
-                    let _ = launcher::launch(&b, terminal.as_deref());
+                    let _ = launcher::launch(&b, terminal.as_deref(), update_mode);
                 }
             });
         }

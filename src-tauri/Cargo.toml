@@ -1,6 +1,6 @@
 [package]
 name = "ssh-bookmarker"
-version = "0.2.0"
+version = "0.3.0"
 description = "SSH connection bookmarks with one-click launch"
 authors = ["aletheia"]
 edition = "2021"

@@ -4,8 +4,21 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-pub fn build_ssh_command(b: &Bookmark) -> String {
+/// OpenClaw maintenance one-liner. Executed on the remote host when the
+/// "Update mode" preference is enabled.
+///
+/// The user typically SSHes as root (or has passwordless sudo) on hosts they
+/// maintain; if not, prefix `sudo` via the bookmark's `extra_args`.
+pub const OPENCLAW_UPDATE_CMD: &str =
+    "apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix";
+
+pub fn build_ssh_command(b: &Bookmark, update_mode: bool) -> String {
     let mut parts: Vec<String> = vec!["ssh".to_string()];
+
+    // Force a TTY so apt-get / openclaw can print progress and prompt if needed.
+    if update_mode {
+        parts.push("-t".into());
+    }
 
     if b.port != 22 {
         parts.push("-p".into());
@@ -24,12 +37,24 @@ pub fn build_ssh_command(b: &Bookmark) -> String {
     }
 
     parts.push(format!("{}@{}", b.user, b.host));
+
+    if update_mode {
+        // Single-quote the remote command and escape embedded single quotes
+        // (OPENCLAW_UPDATE_CMD has none today, but be defensive).
+        parts.push(format!("'{}'", OPENCLAW_UPDATE_CMD.replace('\'', "'\\''")));
+    }
+
     parts.join(" ")
 }
 
-pub fn launch(b: &Bookmark, terminal: Option<&str>) -> AppResult<String> {
-    let cmd = build_ssh_command(b);
-    let script_path = write_command_script(&cmd, &b.name)?;
+pub fn launch(b: &Bookmark, terminal: Option<&str>, update_mode: bool) -> AppResult<String> {
+    let cmd = build_ssh_command(b, update_mode);
+    let label = if update_mode {
+        format!("{}-openclaw-update", b.name)
+    } else {
+        b.name.clone()
+    };
+    let script_path = write_command_script(&cmd, &label)?;
 
     #[cfg(target_os = "macos")]
     {

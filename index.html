@@ -141,6 +141,21 @@
             </small>
           </label>
 
+          <label class="field">
+            <span>Update mode</span>
+            <label class="checkbox">
+              <input type="checkbox" id="prefs-update-mode" />
+              <span>Run OpenClaw maintenance command instead of opening a shell</span>
+            </label>
+            <small class="muted">
+              When enabled, <strong>Launch SSH</strong> runs
+              <code id="prefs-update-cmd">apt-get update &amp;&amp; apt-get upgrade -y &amp;&amp; openclaw update &amp;&amp; openclaw doctor --fix</code>
+              over SSH and exits, instead of dropping you into an interactive shell.
+              Make sure the bookmark's user has the privileges to run it
+              (root, or passwordless sudo via <code>extra_args</code>).
+            </small>
+          </label>
+
           <div class="field">
             <span>Export</span>
             <div>

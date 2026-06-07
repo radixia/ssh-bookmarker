@@ -10,10 +10,12 @@ interface SettingsView {
   terminal: string | null;
   db_dir: string | null;
   hide_dock_icon: boolean;
+  update_mode: boolean;
   effective_db_dir: string;
   default_db_dir: string;
   detected_terminal: string;
   is_macos: boolean;
+  openclaw_update_cmd: string;
 }
 
 interface Bookmark {
@@ -348,6 +350,9 @@ const prefsTerminalHint = () => $<HTMLElement>("#prefs-terminal-hint");
 const prefsDbDirInput = () => $<HTMLInputElement>("#prefs-db-dir");
 const prefsDockField = () => $<HTMLLabelElement>("#prefs-dock-field");
 const prefsHideDockCheckbox = () => $<HTMLInputElement>("#prefs-hide-dock");
+const prefsUpdateModeCheckbox = () =>
+  $<HTMLInputElement>("#prefs-update-mode");
+const prefsUpdateCmd = () => $<HTMLElement>("#prefs-update-cmd");
 
 let prefsState: SettingsView | null = null;
 
@@ -388,6 +393,10 @@ async function loadPrefsModal() {
     prefsDbDirInput().value = view.effective_db_dir;
     prefsDockField().hidden = !view.is_macos;
     prefsHideDockCheckbox().checked = !!view.hide_dock_icon;
+    prefsUpdateModeCheckbox().checked = !!view.update_mode;
+    if (view.openclaw_update_cmd) {
+      prefsUpdateCmd().textContent = view.openclaw_update_cmd;
+    }
   } catch (e) {
     toast(`Could not load preferences: ${e}`, true);
   }
@@ -397,6 +406,7 @@ async function applyPrefs(next: {
   terminal?: string | null;
   db_dir?: string | null;
   hide_dock_icon?: boolean;
+  update_mode?: boolean;
 }) {
   if (!prefsState) return;
   const payload = {
@@ -407,6 +417,10 @@ async function applyPrefs(next: {
       next.hide_dock_icon !== undefined
         ? next.hide_dock_icon
         : prefsState.hide_dock_icon,
+    update_mode:
+      next.update_mode !== undefined
+        ? next.update_mode
+        : prefsState.update_mode,
   };
   try {
     const view: SettingsView = await invoke("set_settings", { settings: payload });
@@ -417,6 +431,7 @@ async function applyPrefs(next: {
       ? ""
       : `Currently using ${view.detected_terminal}.`;
     prefsHideDockCheckbox().checked = !!view.hide_dock_icon;
+    prefsUpdateModeCheckbox().checked = !!view.update_mode;
     await loadTerminalHint();
     await refresh();
   } catch (e) {
@@ -503,6 +518,9 @@ window.addEventListener("DOMContentLoaded", () => {
   $("#prefs-export").addEventListener("click", exportBookmarks);
   prefsHideDockCheckbox().addEventListener("change", () => {
     void applyPrefs({ hide_dock_icon: prefsHideDockCheckbox().checked });
+  });
+  prefsUpdateModeCheckbox().addEventListener("change", () => {
+    void applyPrefs({ update_mode: prefsUpdateModeCheckbox().checked });
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {

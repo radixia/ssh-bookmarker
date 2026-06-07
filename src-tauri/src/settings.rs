@@ -10,6 +10,11 @@ pub struct Settings {
     pub db_dir: Option<String>,
     #[serde(default)]
     pub hide_dock_icon: bool,
+    /// When true, **Launch SSH** runs the OpenClaw maintenance one-liner
+    /// over SSH and exits, instead of dropping the user into an interactive
+    /// shell. See [`launcher::OPENCLAW_UPDATE_CMD`].
+    #[serde(default)]
+    pub update_mode: bool,
 }
 
 impl Settings {

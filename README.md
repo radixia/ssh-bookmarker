@@ -13,7 +13,7 @@
   <a href="https://www.sqlite.org"><img alt="Storage: libSQL / SQLite" src="https://img.shields.io/badge/storage-libSQL%20%2F%20SQLite-003B57?logo=sqlite&logoColor=white"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen"></a>
-  <a href="https://github.com/aletheia/ssh-bookmarker/releases"><img alt="Version" src="https://img.shields.io/badge/version-0.2.0-blue"></a>
+  <a href="https://github.com/aletheia/ssh-bookmarker/releases"><img alt="Version" src="https://img.shields.io/badge/version-0.3.0-blue"></a>
   <br>
   <a href="https://github.com/aletheia/ssh-bookmarker/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/aletheia/ssh-bookmarker?style=social"></a>
   <a href="https://github.com/aletheia/ssh-bookmarker/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/aletheia/ssh-bookmarker"></a>
@@ -96,6 +96,7 @@ Prefer not to build? See [Installation → Prebuilt DMG](#prebuilt-dmg) for the 
 - **Menu-bar-only mode.** Hide the Dock icon to run as a pure menu-bar utility (`Accessory` activation policy). The menu-bar icon stays visible.
 - **Monochrome tray icon.** A proper macOS template image — tints itself black or white to match light/dark menu bars.
 - **JSON export.** Dump every bookmark to a single file for backup, migration, or scripting against.
+- **Update mode (OpenClaw).** When toggled on, **Launch SSH** runs a remote maintenance one-liner (`apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix`) over SSH and exits, instead of dropping into an interactive shell. Useful for one-click fleet maintenance across every bookmark.
 - **Sandbox-friendly launcher.** The app never spawns `ssh` itself; it writes a short script to a temp directory and uses `open -b <bundle-id>` to hand it off. That works cleanly with macOS's sandbox and your terminal's own shell init (login shell, dotfiles, the works).
 
 ## Screenshots
@@ -190,6 +191,11 @@ Open **Settings** from the main window. You can change:
 - **Default terminal** — overrides the system default for new launches. The select shows whether each known terminal is installed.
 - **Database location** — point at any directory. When you change it, the existing DB is copied to the new location if the target doesn't already have one. Your bookmarks come with you. Use **Reset to default** to move back to `~/Library/Application Support/ssh-bookmarker`.
 - **Hide dock icon** — switches the app to macOS `Accessory` activation policy (no Dock tile, no ⌘-Tab entry). The menu-bar icon stays visible.
+- **Update mode** — when enabled, every **Launch SSH** click runs the OpenClaw maintenance command instead of opening a shell:
+  ```sh
+  apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix
+  ```
+  The connection exits when the command finishes. Intended for hosts you reach as root or with passwordless sudo; if you need sudo, prefix it via the bookmark's **Extra args**.
 - **Export bookmarks** — writes every bookmark to a JSON file.
 
 Settings are persisted at `~/Library/Application Support/ssh-bookmarker/settings.json`.
