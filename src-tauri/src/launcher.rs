@@ -28,7 +28,7 @@ pub fn build_openclaw_cmd(_user: &str) -> String {
     OPENCLAW_UPDATE_SEGMENTS.join(" && ")
 }
 
-pub fn build_ssh_command(b: &Bookmark, update_mode: bool) -> String {
+pub fn build_ssh_command(b: &Bookmark, update_mode: bool, exit_on_finish: bool) -> String {
     let mut parts: Vec<String> = vec!["ssh".to_string()];
 
     // Force a TTY so apt-get / openclaw can print progress and prompt if needed.
@@ -55,18 +55,28 @@ pub fn build_ssh_command(b: &Bookmark, update_mode: bool) -> String {
     parts.push(format!("{}@{}", b.user, b.host));
 
     if update_mode {
-        // Build the remote command per-bookmark (sudo prefix when not root),
-        // then single-quote the whole thing for the local shell. Embedded
-        // single quotes are defensively escaped.
-        let remote = build_openclaw_cmd(&b.user);
+        // Build the remote command per-bookmark, then single-quote the whole
+        // thing for the local shell. When the user wants to stay connected
+        // after the maintenance finishes, chain into an interactive login
+        // shell so they land at a normal prompt; we use `;` (not `&&`) so
+        // they can still investigate if a segment failed.
+        let mut remote = build_openclaw_cmd(&b.user);
+        if !exit_on_finish {
+            remote.push_str("; exec $SHELL -l");
+        }
         parts.push(format!("'{}'", remote.replace('\'', "'\\''")));
     }
 
     parts.join(" ")
 }
 
-pub fn launch(b: &Bookmark, terminal: Option<&str>, update_mode: bool) -> AppResult<String> {
-    let cmd = build_ssh_command(b, update_mode);
+pub fn launch(
+    b: &Bookmark,
+    terminal: Option<&str>,
+    update_mode: bool,
+    exit_on_finish: bool,
+) -> AppResult<String> {
+    let cmd = build_ssh_command(b, update_mode, exit_on_finish);
     let label = if update_mode {
         format!("{}-openclaw-update", b.name)
     } else {

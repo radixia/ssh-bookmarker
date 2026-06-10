@@ -11,6 +11,7 @@ interface SettingsView {
   db_dir: string | null;
   hide_dock_icon: boolean;
   openclaw_enabled: boolean;
+  openclaw_exit_on_finish: boolean;
   effective_db_dir: string;
   default_db_dir: string;
   detected_terminal: string;
@@ -374,6 +375,8 @@ const prefsDockField = () => $<HTMLLabelElement>("#prefs-dock-field");
 const prefsHideDockCheckbox = () => $<HTMLInputElement>("#prefs-hide-dock");
 const prefsOpenclawCheckbox = () =>
   $<HTMLInputElement>("#prefs-openclaw-enabled");
+const prefsOpenclawExitCheckbox = () =>
+  $<HTMLInputElement>("#prefs-openclaw-exit");
 const prefsUpdateCmd = () => $<HTMLElement>("#prefs-update-cmd");
 
 let appSettings: SettingsView | null = null;
@@ -418,6 +421,7 @@ async function loadPrefsModal() {
     prefsDockField().hidden = !view.is_macos;
     prefsHideDockCheckbox().checked = !!view.hide_dock_icon;
     prefsOpenclawCheckbox().checked = !!view.openclaw_enabled;
+    prefsOpenclawExitCheckbox().checked = !!view.openclaw_exit_on_finish;
     if (view.openclaw_update_cmd) {
       prefsUpdateCmd().textContent = view.openclaw_update_cmd;
     }
@@ -431,6 +435,7 @@ async function applyPrefs(next: {
   db_dir?: string | null;
   hide_dock_icon?: boolean;
   openclaw_enabled?: boolean;
+  openclaw_exit_on_finish?: boolean;
 }) {
   if (!prefsState) return;
   const payload = {
@@ -445,6 +450,10 @@ async function applyPrefs(next: {
       next.openclaw_enabled !== undefined
         ? next.openclaw_enabled
         : prefsState.openclaw_enabled,
+    openclaw_exit_on_finish:
+      next.openclaw_exit_on_finish !== undefined
+        ? next.openclaw_exit_on_finish
+        : prefsState.openclaw_exit_on_finish,
   };
   try {
     const view: SettingsView = await invoke("set_settings", { settings: payload });
@@ -457,6 +466,7 @@ async function applyPrefs(next: {
       : `Currently using ${view.detected_terminal}.`;
     prefsHideDockCheckbox().checked = !!view.hide_dock_icon;
     prefsOpenclawCheckbox().checked = !!view.openclaw_enabled;
+    prefsOpenclawExitCheckbox().checked = !!view.openclaw_exit_on_finish;
     await loadTerminalHint();
     await refresh();
   } catch (e) {
@@ -546,6 +556,11 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   prefsOpenclawCheckbox().addEventListener("change", () => {
     void applyPrefs({ openclaw_enabled: prefsOpenclawCheckbox().checked });
+  });
+  prefsOpenclawExitCheckbox().addEventListener("change", () => {
+    void applyPrefs({
+      openclaw_exit_on_finish: prefsOpenclawExitCheckbox().checked,
+    });
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {

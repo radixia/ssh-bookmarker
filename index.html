@@ -147,15 +147,23 @@
               <input type="checkbox" id="prefs-openclaw-enabled" />
               <span>🦀 Enable OpenClaw features</span>
             </label>
+            <label class="checkbox">
+              <input type="checkbox" id="prefs-openclaw-exit" />
+              <span>Close session when the OpenClaw command finishes</span>
+            </label>
             <small class="muted">
-              Adds a <strong>🦀 Run OpenClaw update</strong> action to each
-              bookmark's <code>⋮</code> menu. Selecting it runs
+              When the first option is on, a <strong>🦀 Run OpenClaw update</strong>
+              action appears in each bookmark's <code>⋮</code> menu. Selecting
+              it runs
               <code id="prefs-update-cmd">sudo apt-get update &amp;&amp; sudo apt-get upgrade -y &amp;&amp; openclaw update &amp;&amp; openclaw doctor --fix</code>
-              over SSH on that host and exits. The <code>apt-get</code>
-              segments run through <code>sudo</code> — make sure the
-              bookmark user has passwordless sudo (or be ready to type the
-              password at the terminal prompt). <strong>Launch SSH</strong>
-              is unaffected — it always opens an interactive shell.
+              over SSH. The second option controls what happens at the end:
+              by default the SSH session closes; uncheck it to drop into an
+              interactive shell on the remote so you can inspect output or
+              do follow-up work. The <code>apt-get</code> segments run
+              through <code>sudo</code> — make sure the bookmark user has
+              passwordless sudo (or be ready to type the password at the
+              terminal prompt). <strong>Launch SSH</strong> is unaffected —
+              it always opens an interactive shell.
             </small>
           </label>
 

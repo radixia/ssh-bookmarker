@@ -2,7 +2,7 @@ use crate::error::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Settings {
     #[serde(default)]
     pub terminal: Option<String>,
@@ -16,6 +16,29 @@ pub struct Settings {
     /// shell.
     #[serde(default, alias = "update_mode")]
     pub openclaw_enabled: bool,
+    /// When true (default), the SSH session closes once the OpenClaw
+    /// maintenance command finishes. When false, an interactive login
+    /// shell is `exec`-ed on the remote so the user lands in a normal
+    /// shell after the command completes — useful for inspecting output
+    /// or doing follow-up work.
+    #[serde(default = "default_true")]
+    pub openclaw_exit_on_finish: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            terminal: None,
+            db_dir: None,
+            hide_dock_icon: false,
+            openclaw_enabled: false,
+            openclaw_exit_on_finish: true,
+        }
+    }
 }
 
 impl Settings {
