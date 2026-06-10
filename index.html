@@ -150,10 +150,9 @@
             <small class="muted">
               Adds a <strong>🦀 Run OpenClaw update</strong> action to each
               bookmark's <code>⋮</code> menu. Selecting it runs
-              <code id="prefs-update-cmd">apt-get update &amp;&amp; apt-get upgrade -y &amp;&amp; openclaw update &amp;&amp; openclaw doctor --fix</code>
-              over SSH on that host and exits. When the bookmark user isn't
-              <code>root</code>, each segment is prefixed with
-              <code>sudo</code> automatically — make sure that user has
+              <code id="prefs-update-cmd">sudo apt-get update &amp;&amp; sudo apt-get upgrade -y &amp;&amp; sudo openclaw update &amp;&amp; sudo openclaw doctor --fix</code>
+              over SSH on that host and exits. Every segment is invoked
+              through <code>sudo</code> — make sure the bookmark user has
               passwordless sudo (or be ready to type the password at the
               terminal prompt). <strong>Launch SSH</strong> is unaffected —
               it always opens an interactive shell.

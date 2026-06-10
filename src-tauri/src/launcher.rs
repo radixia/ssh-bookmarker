@@ -5,33 +5,28 @@ use std::path::PathBuf;
 use std::process::Command;
 
 /// Remote segments composing the OpenClaw maintenance one-liner. Each is
-/// joined with ` && ` and may be prefixed with `sudo ` when the bookmark
-/// user isn't root (see [`build_openclaw_cmd`]).
+/// joined with ` && ` and always invoked through `sudo` — apt-get needs
+/// root, and sudo's `secure_path` covers `/usr/local/bin` so the openclaw
+/// binary is found even when the non-interactive ssh shell's PATH wouldn't
+/// reach it. (Running `sudo` as the root user is a no-op on standard
+/// installs, so we don't bother conditionalising on the bookmark's user.)
 const OPENCLAW_UPDATE_SEGMENTS: &[&str] = &[
-    "apt-get update",
-    "apt-get upgrade -y",
-    "openclaw update",
-    "openclaw doctor --fix",
+    "sudo apt-get update",
+    "sudo apt-get upgrade -y",
+    "sudo openclaw update",
+    "sudo openclaw doctor --fix",
 ];
 
-/// The OpenClaw maintenance one-liner as it runs **when the bookmark user is
-/// `root`** (no sudo prefix). Surfaced through `SettingsView.openclaw_update_cmd`
-/// for the prefs UI hint.
+/// The OpenClaw maintenance one-liner, as actually executed on the remote.
+/// Surfaced through `SettingsView.openclaw_update_cmd` for the prefs UI hint.
 pub const OPENCLAW_UPDATE_CMD: &str =
-    "apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix";
+    "sudo apt-get update && sudo apt-get upgrade -y && sudo openclaw update && sudo openclaw doctor --fix";
 
-/// Build the remote command, prefixing each segment with `sudo ` when the
-/// SSH user is not root. Sudo's default `secure_path` on Debian/Ubuntu
-/// includes `/usr/local/bin`, which fixes both the permission issue *and*
-/// the non-interactive-PATH issue that hides `openclaw` from a bare ssh
-/// session.
-pub fn build_openclaw_cmd(user: &str) -> String {
-    let prefix = if user.trim() == "root" { "" } else { "sudo " };
-    OPENCLAW_UPDATE_SEGMENTS
-        .iter()
-        .map(|s| format!("{prefix}{s}"))
-        .collect::<Vec<_>>()
-        .join(" && ")
+/// Build the remote command. Currently just joins [`OPENCLAW_UPDATE_SEGMENTS`]
+/// with ` && `; `user` is accepted for parity with future per-bookmark
+/// tailoring (e.g. skipping sudo when an env var marks the host as root-only).
+pub fn build_openclaw_cmd(_user: &str) -> String {
+    OPENCLAW_UPDATE_SEGMENTS.join(" && ")
 }
 
 pub fn build_ssh_command(b: &Bookmark, update_mode: bool) -> String {
