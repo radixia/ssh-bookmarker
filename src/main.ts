@@ -10,7 +10,7 @@ interface SettingsView {
   terminal: string | null;
   db_dir: string | null;
   hide_dock_icon: boolean;
-  update_mode: boolean;
+  openclaw_enabled: boolean;
   effective_db_dir: string;
   default_db_dir: string;
   detected_terminal: string;
@@ -159,6 +159,9 @@ function bookmarkCard(b: Bookmark): HTMLDivElement {
   const card = document.createElement("div");
   card.className = "card";
   const portStr = b.port && b.port !== 22 ? `:${b.port}` : "";
+  const openclawItem = appSettings?.openclaw_enabled
+    ? `<button type="button" role="menuitem" data-action="openclaw-update">🦀 Run OpenClaw update</button>`
+    : "";
   card.innerHTML = `
     <div class="card-head">
       <div class="card-title">
@@ -176,6 +179,7 @@ function bookmarkCard(b: Bookmark): HTMLDivElement {
         <div class="card-menu hidden" role="menu">
           <button type="button" role="menuitem" data-action="edit">Edit</button>
           <button type="button" role="menuitem" data-action="duplicate">Duplicate</button>
+          ${openclawItem}
           <button type="button" role="menuitem" class="danger" data-action="delete">Delete</button>
         </div>
       </div>
@@ -209,6 +213,13 @@ function bookmarkCard(b: Bookmark): HTMLDivElement {
     closeAllCardMenus();
     void duplicateBookmark(b);
   });
+  card.querySelector('[data-action="openclaw-update"]')?.addEventListener(
+    "click",
+    () => {
+      closeAllCardMenus();
+      void runOpenclawUpdate(b);
+    },
+  );
   card.querySelector('[data-action="delete"]')?.addEventListener("click", () => {
     closeAllCardMenus();
     void deleteBookmark(b);
@@ -284,6 +295,16 @@ async function refresh() {
   }
 }
 
+async function runOpenclawUpdate(b: Bookmark) {
+  if (!b.id) return;
+  try {
+    const cmd: string = await invoke("run_openclaw_update", { id: b.id });
+    toast(`🦀 Running OpenClaw update on ${b.name}: ${cmd}`);
+  } catch (e) {
+    toast(`OpenClaw update failed: ${e}`, true);
+  }
+}
+
 async function launchBookmark(b: Bookmark) {
   if (!b.id) return;
   try {
@@ -335,6 +356,7 @@ async function saveBookmark(e: SubmitEvent) {
 async function loadTerminalHint() {
   try {
     const view: SettingsView = await invoke("get_settings");
+    appSettings = view;
     const name = view.terminal && view.terminal.trim()
       ? view.terminal
       : view.detected_terminal;
@@ -350,9 +372,11 @@ const prefsTerminalHint = () => $<HTMLElement>("#prefs-terminal-hint");
 const prefsDbDirInput = () => $<HTMLInputElement>("#prefs-db-dir");
 const prefsDockField = () => $<HTMLLabelElement>("#prefs-dock-field");
 const prefsHideDockCheckbox = () => $<HTMLInputElement>("#prefs-hide-dock");
-const prefsUpdateModeCheckbox = () =>
-  $<HTMLInputElement>("#prefs-update-mode");
+const prefsOpenclawCheckbox = () =>
+  $<HTMLInputElement>("#prefs-openclaw-enabled");
 const prefsUpdateCmd = () => $<HTMLElement>("#prefs-update-cmd");
+
+let appSettings: SettingsView | null = null;
 
 let prefsState: SettingsView | null = null;
 
@@ -393,7 +417,7 @@ async function loadPrefsModal() {
     prefsDbDirInput().value = view.effective_db_dir;
     prefsDockField().hidden = !view.is_macos;
     prefsHideDockCheckbox().checked = !!view.hide_dock_icon;
-    prefsUpdateModeCheckbox().checked = !!view.update_mode;
+    prefsOpenclawCheckbox().checked = !!view.openclaw_enabled;
     if (view.openclaw_update_cmd) {
       prefsUpdateCmd().textContent = view.openclaw_update_cmd;
     }
@@ -406,7 +430,7 @@ async function applyPrefs(next: {
   terminal?: string | null;
   db_dir?: string | null;
   hide_dock_icon?: boolean;
-  update_mode?: boolean;
+  openclaw_enabled?: boolean;
 }) {
   if (!prefsState) return;
   const payload = {
@@ -417,21 +441,22 @@ async function applyPrefs(next: {
       next.hide_dock_icon !== undefined
         ? next.hide_dock_icon
         : prefsState.hide_dock_icon,
-    update_mode:
-      next.update_mode !== undefined
-        ? next.update_mode
-        : prefsState.update_mode,
+    openclaw_enabled:
+      next.openclaw_enabled !== undefined
+        ? next.openclaw_enabled
+        : prefsState.openclaw_enabled,
   };
   try {
     const view: SettingsView = await invoke("set_settings", { settings: payload });
     prefsState = view;
+    appSettings = view;
     prefsDbDirInput().value = view.effective_db_dir;
     prefsTerminalSelect().value = view.terminal ?? "";
     prefsTerminalHint().textContent = view.terminal
       ? ""
       : `Currently using ${view.detected_terminal}.`;
     prefsHideDockCheckbox().checked = !!view.hide_dock_icon;
-    prefsUpdateModeCheckbox().checked = !!view.update_mode;
+    prefsOpenclawCheckbox().checked = !!view.openclaw_enabled;
     await loadTerminalHint();
     await refresh();
   } catch (e) {
@@ -519,8 +544,8 @@ window.addEventListener("DOMContentLoaded", () => {
   prefsHideDockCheckbox().addEventListener("change", () => {
     void applyPrefs({ hide_dock_icon: prefsHideDockCheckbox().checked });
   });
-  prefsUpdateModeCheckbox().addEventListener("change", () => {
-    void applyPrefs({ update_mode: prefsUpdateModeCheckbox().checked });
+  prefsOpenclawCheckbox().addEventListener("change", () => {
+    void applyPrefs({ openclaw_enabled: prefsOpenclawCheckbox().checked });
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -542,6 +567,8 @@ window.addEventListener("DOMContentLoaded", () => {
     updatePreview();
   });
 
-  refresh();
-  loadTerminalHint();
+  void (async () => {
+    await loadTerminalHint();
+    await refresh();
+  })();
 });

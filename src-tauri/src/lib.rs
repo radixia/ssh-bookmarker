@@ -62,11 +62,26 @@ async fn delete_bookmark(
 #[tauri::command]
 async fn launch_bookmark(state: State<'_, AppState>, id: i64) -> AppResult<String> {
     let bookmark = state.db.lock().await.get(id).await?;
-    let (terminal, update_mode) = {
+    let terminal = state.settings.lock().await.terminal.clone();
+    launcher::launch(&bookmark, terminal.as_deref(), false)
+}
+
+#[tauri::command]
+async fn run_openclaw_update(
+    state: State<'_, AppState>,
+    id: i64,
+) -> AppResult<String> {
+    let bookmark = state.db.lock().await.get(id).await?;
+    let (terminal, openclaw_enabled) = {
         let s = state.settings.lock().await;
-        (s.terminal.clone(), s.update_mode)
+        (s.terminal.clone(), s.openclaw_enabled)
     };
-    launcher::launch(&bookmark, terminal.as_deref(), update_mode)
+    if !openclaw_enabled {
+        return Err(AppError::Other(
+            "OpenClaw features are disabled in Preferences.".into(),
+        ));
+    }
+    launcher::launch(&bookmark, terminal.as_deref(), true)
 }
 
 #[tauri::command]
@@ -161,7 +176,7 @@ struct SettingsView {
     terminal: Option<String>,
     db_dir: Option<String>,
     hide_dock_icon: bool,
-    update_mode: bool,
+    openclaw_enabled: bool,
     effective_db_dir: String,
     default_db_dir: String,
     detected_terminal: String,
@@ -183,7 +198,7 @@ impl From<Settings> for SettingsView {
             terminal: s.terminal,
             db_dir: s.db_dir,
             hide_dock_icon: s.hide_dock_icon,
-            update_mode: s.update_mode,
+            openclaw_enabled: s.openclaw_enabled,
             effective_db_dir: effective,
             default_db_dir: default_dir,
             detected_terminal: launcher::detect_default_terminal(),
@@ -254,12 +269,9 @@ fn handle_tray_menu_event(app: &AppHandle, event: MenuEvent) {
             tauri::async_runtime::spawn(async move {
                 let state = app.state::<AppState>();
                 let bookmark = state.db.lock().await.get(bid).await;
-                let (terminal, update_mode) = {
-                    let s = state.settings.lock().await;
-                    (s.terminal.clone(), s.update_mode)
-                };
+                let terminal = state.settings.lock().await.terminal.clone();
                 if let Ok(b) = bookmark {
-                    let _ = launcher::launch(&b, terminal.as_deref(), update_mode);
+                    let _ = launcher::launch(&b, terminal.as_deref(), false);
                 }
             });
         }
@@ -319,6 +331,7 @@ pub fn run() {
             update_bookmark,
             delete_bookmark,
             launch_bookmark,
+            run_openclaw_update,
             default_terminal,
             check_reachable,
             get_settings,

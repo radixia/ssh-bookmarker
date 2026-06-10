@@ -96,7 +96,7 @@ Prefer not to build? See [Installation → Prebuilt DMG](#prebuilt-dmg) for the 
 - **Menu-bar-only mode.** Hide the Dock icon to run as a pure menu-bar utility (`Accessory` activation policy). The menu-bar icon stays visible.
 - **Monochrome tray icon.** A proper macOS template image — tints itself black or white to match light/dark menu bars.
 - **JSON export.** Dump every bookmark to a single file for backup, migration, or scripting against.
-- **Update mode (OpenClaw).** When toggled on, **Launch SSH** runs a remote maintenance one-liner (`apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix`) over SSH and exits, instead of dropping into an interactive shell. Useful for one-click fleet maintenance across every bookmark.
+- **🦀 OpenClaw integration.** Flip the **Enable OpenClaw features** preference and each bookmark card grows a **🦀 Run OpenClaw update** action in its `⋮` menu. Selecting it runs the remote maintenance one-liner (`apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix`) over SSH on that single host and exits. **Launch SSH** itself is unchanged and always opens an interactive shell.
 - **Sandbox-friendly launcher.** The app never spawns `ssh` itself; it writes a short script to a temp directory and uses `open -b <bundle-id>` to hand it off. That works cleanly with macOS's sandbox and your terminal's own shell init (login shell, dotfiles, the works).
 
 ## Screenshots
@@ -191,11 +191,11 @@ Open **Settings** from the main window. You can change:
 - **Default terminal** — overrides the system default for new launches. The select shows whether each known terminal is installed.
 - **Database location** — point at any directory. When you change it, the existing DB is copied to the new location if the target doesn't already have one. Your bookmarks come with you. Use **Reset to default** to move back to `~/Library/Application Support/ssh-bookmarker`.
 - **Hide dock icon** — switches the app to macOS `Accessory` activation policy (no Dock tile, no ⌘-Tab entry). The menu-bar icon stays visible.
-- **Update mode** — when enabled, every **Launch SSH** click runs the OpenClaw maintenance command instead of opening a shell:
+- **🦀 Enable OpenClaw features** — master switch for OpenClaw integration. When on, every bookmark card gets a **🦀 Run OpenClaw update** entry in its `⋮` menu that runs:
   ```sh
   apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix
   ```
-  The connection exits when the command finishes. Intended for hosts you reach as root or with passwordless sudo; if you need sudo, prefix it via the bookmark's **Extra args**.
+  on that specific host over SSH and exits. **Launch SSH** is unchanged and always opens an interactive shell. Intended for hosts reached as root or with passwordless sudo; if you need sudo, prefix it via the bookmark's **Extra args**.
 - **Export bookmarks** — writes every bookmark to a JSON file.
 
 Settings are persisted at `~/Library/Application Support/ssh-bookmarker/settings.json`.
@@ -257,7 +257,8 @@ Nothing is encrypted at rest. **Do not store passwords here** — the schema has
 | `create_bookmark`  | Insert a bookmark; rebuilds the tray menu on success.                       |
 | `update_bookmark`  | Update by id; rebuilds the tray menu.                                       |
 | `delete_bookmark`  | Delete by id; rebuilds the tray menu.                                       |
-| `launch_bookmark`  | Build the ssh command and open it in the configured terminal.               |
+| `launch_bookmark`  | Build the ssh command and open it in the configured terminal (interactive shell). |
+| `run_openclaw_update` | Run the OpenClaw maintenance one-liner on a specific bookmark. Errors if `openclaw_enabled` is false. |
 | `default_terminal` | Detect the system default terminal via LaunchServices.                      |
 | `list_terminals`   | List known terminals and whether each is installed.                         |
 | `check_reachable`  | TCP probe with SSH banner check (3.5 s timeout). Powers the per-card LED.   |
