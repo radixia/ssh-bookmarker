@@ -4,23 +4,22 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-/// Remote segments composing the OpenClaw maintenance one-liner. Each is
-/// joined with ` && ` and always invoked through `sudo` — apt-get needs
-/// root, and sudo's `secure_path` covers `/usr/local/bin` so the openclaw
-/// binary is found even when the non-interactive ssh shell's PATH wouldn't
-/// reach it. (Running `sudo` as the root user is a no-op on standard
-/// installs, so we don't bother conditionalising on the bookmark's user.)
+/// Remote segments composing the OpenClaw maintenance one-liner. apt-get
+/// always needs root, so its segments carry an explicit `sudo`. The openclaw
+/// binary manages its own privilege escalation as needed, so it runs as the
+/// bookmark's SSH user. Segments are joined with ` && ` for sequential
+/// execution with short-circuit on failure.
 const OPENCLAW_UPDATE_SEGMENTS: &[&str] = &[
     "sudo apt-get update",
     "sudo apt-get upgrade -y",
-    "sudo openclaw update",
-    "sudo openclaw doctor --fix",
+    "openclaw update",
+    "openclaw doctor --fix",
 ];
 
 /// The OpenClaw maintenance one-liner, as actually executed on the remote.
 /// Surfaced through `SettingsView.openclaw_update_cmd` for the prefs UI hint.
 pub const OPENCLAW_UPDATE_CMD: &str =
-    "sudo apt-get update && sudo apt-get upgrade -y && sudo openclaw update && sudo openclaw doctor --fix";
+    "sudo apt-get update && sudo apt-get upgrade -y && openclaw update && openclaw doctor --fix";
 
 /// Build the remote command. Currently just joins [`OPENCLAW_UPDATE_SEGMENTS`]
 /// with ` && `; `user` is accepted for parity with future per-bookmark
