@@ -4,13 +4,35 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-/// OpenClaw maintenance one-liner. Executed on the remote host when the
-/// "Update mode" preference is enabled.
-///
-/// The user typically SSHes as root (or has passwordless sudo) on hosts they
-/// maintain; if not, prefix `sudo` via the bookmark's `extra_args`.
+/// Remote segments composing the OpenClaw maintenance one-liner. Each is
+/// joined with ` && ` and may be prefixed with `sudo ` when the bookmark
+/// user isn't root (see [`build_openclaw_cmd`]).
+const OPENCLAW_UPDATE_SEGMENTS: &[&str] = &[
+    "apt-get update",
+    "apt-get upgrade -y",
+    "openclaw update",
+    "openclaw doctor --fix",
+];
+
+/// The OpenClaw maintenance one-liner as it runs **when the bookmark user is
+/// `root`** (no sudo prefix). Surfaced through `SettingsView.openclaw_update_cmd`
+/// for the prefs UI hint.
 pub const OPENCLAW_UPDATE_CMD: &str =
     "apt-get update && apt-get upgrade -y && openclaw update && openclaw doctor --fix";
+
+/// Build the remote command, prefixing each segment with `sudo ` when the
+/// SSH user is not root. Sudo's default `secure_path` on Debian/Ubuntu
+/// includes `/usr/local/bin`, which fixes both the permission issue *and*
+/// the non-interactive-PATH issue that hides `openclaw` from a bare ssh
+/// session.
+pub fn build_openclaw_cmd(user: &str) -> String {
+    let prefix = if user.trim() == "root" { "" } else { "sudo " };
+    OPENCLAW_UPDATE_SEGMENTS
+        .iter()
+        .map(|s| format!("{prefix}{s}"))
+        .collect::<Vec<_>>()
+        .join(" && ")
+}
 
 pub fn build_ssh_command(b: &Bookmark, update_mode: bool) -> String {
     let mut parts: Vec<String> = vec!["ssh".to_string()];
@@ -39,9 +61,11 @@ pub fn build_ssh_command(b: &Bookmark, update_mode: bool) -> String {
     parts.push(format!("{}@{}", b.user, b.host));
 
     if update_mode {
-        // Single-quote the remote command and escape embedded single quotes
-        // (OPENCLAW_UPDATE_CMD has none today, but be defensive).
-        parts.push(format!("'{}'", OPENCLAW_UPDATE_CMD.replace('\'', "'\\''")));
+        // Build the remote command per-bookmark (sudo prefix when not root),
+        // then single-quote the whole thing for the local shell. Embedded
+        // single quotes are defensively escaped.
+        let remote = build_openclaw_cmd(&b.user);
+        parts.push(format!("'{}'", remote.replace('\'', "'\\''")));
     }
 
     parts.join(" ")
